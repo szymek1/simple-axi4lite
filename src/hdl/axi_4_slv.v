@@ -30,7 +30,7 @@ module axi_4_slv (
 	input	wire					               S_AXI_AWVALID,  // AXI write address valid
 	output	wire					               S_AXI_AWREADY,  // AXI write address ready
 	input	wire [$clog2(`C_REGISTERS_NUMBER)-1:0] S_AXI_AWADDR,   // AXI write address
-	input	wire [2:0]				               S_AXI_AWPROT,
+	input	wire [2:0]				               S_AXI_AWPROT,   // AXI write protection
 
 	// AXI write data and write strobe
 	input	wire					               S_AXI_WVALID,   // AXI write data valid. This signal indicates that valid write data 
@@ -50,14 +50,13 @@ module axi_4_slv (
 	input	wire					               S_AXI_ARVALID,  // AXI read address valid
 	output	wire					               S_AXI_ARREADY,  // AXI read address ready
 	input	wire [$clog2(`C_REGISTERS_NUMBER)-1:0] S_AXI_ARADDR,   // AXI read address
-	input	wire [2:0]				               S_AXI_ARPROT,
-    
+	input	wire [2:0]				               S_AXI_ARPROT,   // AXI read protection
+
 	// AXI read data and response
 	output	wire					               S_AXI_RVALID,   // AXI read address valid
 	input	wire					               S_AXI_RREADY,   // AXI read address ready
 	output	wire [C_AXI_DATA_WIDTH-1:0]		       S_AXI_RDATA,    // AXI read data issued by slave
 	output	wire [1:0]				               S_AXI_RRESP     // AXI read response. This signal indicates the status of the read transfer
                                                                    // Check axi4_lite_configuration.vh for details
-
 );
 endmodule
