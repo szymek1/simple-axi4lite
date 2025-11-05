@@ -37,7 +37,7 @@ module axi_4_slv (
                                                                    // and strobes are available
 	output	wire					               S_AXI_WREADY,   // AXI write data ready
 	input	wire [`C_AXI_DATA_WIDTH-1:0]		   S_AXI_WDATA,    // AXI write data
-	input	wire [`C_AXI_STROBE_WIDTH/8-1:0]	   S_AXI_WSTRB,    // AXI write strobe. This signal indicates which byte lanes hold valid data
+	input	wire [`C_AXI_STROBE_WIDTH1:0]	   S_AXI_WSTRB,    // AXI write strobe. This signal indicates which byte lanes hold valid data
 
 	// AXI write response
 	output	wire					               S_AXI_BVALID,   // AXI write response valid. This signal indicates that the channel is signaling 
@@ -49,7 +49,7 @@ module axi_4_slv (
 	// AXI read address
 	input	wire					               S_AXI_ARVALID,  // AXI read address valid
 	output	wire					               S_AXI_ARREADY,  // AXI read address ready
-	input	wire [`C_AXI_DATA_WIDTH-1:0]           S_AXI_ARADDR,   // AXI read address
+	input	wire [`C_AXI_ADDR_WIDTH-1:0]           S_AXI_ARADDR,   // AXI read address
 	input	wire [2:0]				               S_AXI_ARPROT,   // AXI read protection
 
 	// AXI read data and response
@@ -74,20 +74,49 @@ module axi_4_slv (
     // FSM driver wires
     
 
-    // local AXI flags
-    reg       axi_wrt_addr_ready;
-    reg       axi_wrt_dat_ready;
-    reg       axi_wrt_response_valid;
-    reg [1:0] axi_wrt_response;
-    reg       axi_rd_addr_ready;
-    reg       axi_rd_addr_vallid;
+    // Internal registers
+    // Write channel internal registers
+    reg                         axi_awready_reg;
+    reg                         axi_wready_reg;
+    reg                         axi_bvalid_reg;
+    reg [1:0]                   axi_bresp_reg;
+    reg [`C_AXI_ADDR_WIDTH-1:0] axi_awaddr_latched; // latched write address
 
-    // wiring local AXI flags to the output wires
-    assign S_AXI_AWREADY = axi_wrt_addr_ready;
-    assign S_AXI_WREADY  = axi_wrt_dat_ready;
-    assign S_AXI_BVALID  = axi_wrt_response_valid;
-    assign S_AXI_BRESP   = axi_wrt_response;
-    assign S_AXI_ARREADY = axi_rd_addr_ready;
-    assign S_AXI_RVALID  = axi_rd_addr_vallid;
+    // Read channel rnternal registers
+    reg                         axi_arready_reg;
+    reg                         axi_rvalid_reg;
+    reg [1:0]                   axi_rresp_reg;
+    reg [`C_AXI_DATA_WIDTH-1:0] axi_rdata_reg;      // pipelined read data output
+    
+    // internal write-enable pulse for user logic
+    reg                         slv_reg_wren;
+
+    // Output wires
+    assign S_AXI_AWREADY = axi_awready_reg;
+    assign S_AXI_WREADY  = axi_wready_reg;
+    assign S_AXI_BVALID  = axi_bvalid_reg;
+    assign S_AXI_BRESP   = axi_bresp_reg;
+    
+    assign S_AXI_ARREADY = axi_arready_reg;
+    assign S_AXI_RVALID  = axi_rvalid_reg;
+    assign S_AXI_RRESP   = axi_rresp_reg;
+    assign S_AXI_RDATA   = axi_rdata_reg;;
+
+
+    always @(posedge S_AXI_ACLK) begin
+        if (!S_AXI_ARESETN) begin
+            for (reg_id = 0; reg_id < `C_REGISTERS_NUMBER; reg_id = reg_id + 1) begin
+                regfile[reg_id] <= `C_AXI_DATA_WIDTH'h0;
+            end
+            axi_awready_reg <= `SLV_AXI_WRT_ADDR_NREADY;
+            axi_wready_reg  <= `SLV_AXI_WRT_DATA_NREADY;
+            axi_bvalid_reg  <= `SLV_AXI_WRT_NVALID;
+            axi_bresp_reg   <= `OKAY;
+            axi_arready_reg <= `SLV_AXI_RD_ADDR_NREADY;
+            axi_rvalid_reg  <= `SLV_AXI_RD_ADDR_NVALID;
+        end else begin
+
+        end
+    end
 
 endmodule
