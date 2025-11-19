@@ -66,39 +66,38 @@ module axi_4_lite_slv (
     // Write process
     always @(posedge S_AXI_ACLK) begin
         if (!S_AXI_ARESETN) begin
-            axi_awready_reg    <= 0;
-            axi_wready_reg     <= 0;
-            axi_bvalid_reg     <= 0;
+            axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
+            axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
+            axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
             axi_awaddr_latched <= 0;
             slv_reg_wren       <= 0;
         end else begin
-            slv_reg_wren <= 0;
-            axi_awready_reg <= 0;
-            axi_wready_reg <= 0;
-            axi_bvalid_reg <= 0;
-            // Beginning of the write transaction: master issues wrtie address and sets S_AXI_AWVALID high
-            if (S_AXI_AWVALID == 1 && axi_awready_reg == 0) begin
-                axi_awready_reg <= 1;
+            axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
+            axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
+            axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
+            slv_reg_wren       <= 0;
+
+            // Write transaction begins: master issues write addresss and sets S_AXI_AWVALID high
+            if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_NREADY) begin
+                axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY;
                 axi_awaddr_latched <= S_AXI_AWADDR;
             end 
 
             // Write address handshake is complete 
-            if (S_AXI_AWVALID == 1 && axi_awready_reg == 1) begin
-                axi_wready_reg <= 1;   
-                // axi_awready_reg <= 0; 
+            if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_READY) begin
+                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY;   
             end
 
-            // Waiting for the master to issue S_AXI_WVALID high so we know that there's data to write actually
-            if (S_AXI_WVALID == 0 && axi_wready_reg == 1) begin
-                axi_wready_reg <= 1; 
+            // Waiting for the master to issue S_AXI_WVALID high to make sure that there's a write data available
+            if (S_AXI_WVALID == `MS_WRT_DATA_NVALID && axi_wready_reg == `SLV_AXI_WRT_DATA_READY) begin
+                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY; 
             end
 
-            // Here the write occurs
-            if (S_AXI_WVALID == 1 && S_AXI_BREADY == 1 && axi_wready_reg == 1) begin
-                // axi_wready_reg <= 0; 
-                slv_reg_wren   <= 1;
-                axi_bresp_reg  <= `OKAY;
-                axi_bvalid_reg <= 1;
+            // Register file will begin writing in the next clock cycle once this condition is satisfied
+            if (S_AXI_WVALID == `MS_WRT_DATA_VALID && S_AXI_BREADY == `MS_WRT_RESP_READY && axi_wready_reg == `SLV_AXI_WRT_DATA_READY) begin
+                slv_reg_wren       <= 1;
+                axi_bresp_reg      <= `OKAY;
+                axi_bvalid_reg     <= `SLV_AXI_WRT_VALID;
             end
         end
     end
