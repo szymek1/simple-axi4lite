@@ -109,9 +109,17 @@ module axi_4_lite_slv_tb;
         $display("[%0t] Test 1: Full Word Write to Reg 0.", $time);
         axi_write(0, 32'hDEADBEEF, 4'b1111);
 
+        // --- TEST 2: Full Word Read ---
+        $display("[%0t] Test 2: Full Word Read from Reg 0.", $time);
+        axi_read(0, 32'hDEADBEEF);
+
         // --- TEST 3: Full Word Write (for byte-write test) ---
         $display("[%0t] Test 3: Pre-loading Reg 5 with 0xFFFFFFFF.", $time);
         axi_write(5 * 4, 32'hFFFFFFFF, 4'b1111);
+
+        // --- TEST 4: Full Word Read (for byte-write test) ---
+        $display("[%0t] Test 4: Full Word Read from Reg 5.", $time);
+        axi_read(5 * 4, 32'hFFFFFFFF);
 
         /*
         // --- TEST 2: Full Word Read ---
@@ -158,7 +166,7 @@ module axi_4_lite_slv_tb;
         S_AXI_AWADDR  <= addr;
 
         // 2. Send Data
-        // wait until slave accepts write address
+        // Wait until slave accepts write address
         wait (S_AXI_AWREADY)
         @(posedge S_AXI_ACLK);
         S_AXI_BREADY <= 1'b1;
@@ -183,7 +191,7 @@ module axi_4_lite_slv_tb;
     endtask
 
 
-    // --- AXI Read Task ---
+    // AXI master read task
     task axi_read(
         input [`C_AXI_ADDR_WIDTH-1:0] addr,
         input [`C_AXI_DATA_WIDTH-1:0] expected_data

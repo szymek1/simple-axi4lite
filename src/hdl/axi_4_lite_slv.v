@@ -57,11 +57,60 @@ module axi_4_lite_slv (
     reg [`C_AXI_ADDR_WIDTH-1:0] axi_awaddr_latched; // latched write address
     reg                         slv_reg_wren;       // internal write-enable pulse for user logic
 
+    // Read channel internal registers
+    reg                         axi_arready_reg;
+    reg                         axi_rvalid_reg;
+    reg [1:0]                   axi_rresp_reg;
+    reg [`C_AXI_DATA_WIDTH-1:0] axi_rdata_reg;      // pipelined read data output
+    reg [`C_AXI_ADDR_WIDTH-1:0] axi_araddr_latched; // latched read address
+
     // Output wires
+    // Write related
     assign S_AXI_AWREADY = axi_awready_reg;
     assign S_AXI_WREADY  = axi_wready_reg;
     assign S_AXI_BVALID  = axi_bvalid_reg;
     assign S_AXI_BRESP   = axi_bresp_reg;
+
+    // Read related
+    assign S_AXI_ARREADY = axi_arready_reg;
+    assign S_AXI_RVALID  = axi_rvalid_reg;
+    assign S_AXI_RRESP   = axi_rresp_reg;
+    assign S_AXI_RDATA   = axi_rdata_reg;
+
+    // Read process
+    always @(posedge S_AXI_ACLK) begin
+        if (!S_AXI_ARESETN) begin
+            axi_arready_reg <= 0;
+            axi_rvalid_reg  <= 0;
+            axi_araddr_latched <= 0;
+            axi_rdata_reg   <= 0;
+            axi_rresp_reg  <= 2'bx;
+        end else begin
+            axi_arready_reg <= 0;
+            axi_rvalid_reg  <= 0;
+
+            // Read transaction begins: master issues read address and sets S_AXI_ARVALID high
+            if (S_AXI_ARVALID == 1 && axi_arready_reg == 0) begin
+                axi_arready_reg <= 1;
+                axi_araddr_latched <= S_AXI_ARADDR;
+            end
+
+            // Read handshake: read data will be available in the next clock cycle
+            if (S_AXI_ARVALID == 1 && axi_arready_reg == 1) begin
+                axi_arready_reg <= 0;
+                axi_rvalid_reg  <= 1;
+                axi_rresp_reg  <= `OKAY;
+                axi_rdata_reg   <= regfile[axi_araddr_latched];
+            end
+
+            if (S_AXI_RREADY == 1 && axi_rvalid_reg == 1) begin
+                axi_rvalid_reg  <= 0;
+                axi_rresp_reg  <= 2'bx;
+                axi_rdata_reg   <= 0;
+            end
+
+        end
+    end
 
     // Write process
     always @(posedge S_AXI_ACLK) begin
