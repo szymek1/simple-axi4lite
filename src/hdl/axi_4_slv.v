@@ -20,7 +20,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-`include "../include/axi4_lite_configuration.vh"
+`include "../include/axi_4_lite_configuration.vh"
 
 
 module axi_4_slv (
@@ -39,7 +39,7 @@ module axi_4_slv (
                                                                    // and strobes are available
 	output	wire					               S_AXI_WREADY,   // AXI write data ready
 	input	wire [`C_AXI_DATA_WIDTH-1:0]		   S_AXI_WDATA,    // AXI write data
-	input	wire [`C_AXI_STROBE_WIDTH1:0]	   S_AXI_WSTRB,    // AXI write strobe. This signal indicates which byte lanes hold valid data
+	input	wire [`C_AXI_STROBE_WIDTH-1:0]	       S_AXI_WSTRB,    // AXI write strobe. This signal indicates which byte lanes hold valid data
 
 	// AXI write response
 	output	wire					               S_AXI_BVALID,   // AXI write response valid. This signal indicates that the channel is signaling 
@@ -129,10 +129,10 @@ module axi_4_slv (
                 end
 
                 RD_DATA: begin
-                    axi_rvalid_reg <= `SLV_AXI_RD_ADDR_VALID; // data is avaliable in teh pipelined register
+                    axi_rvalid_reg <= `SLV_AXI_RD_ADDR_VALID; // data is avaliable in the pipelined register
 
                     if (S_AXI_RREADY == `MS_RD_ADDR_READY && axi_rvalid_reg == `SLV_AXI_RD_ADDR_VALID) begin
-                        state_read      <= RD_IDLE;
+                        rd_state        <= RD_IDLE;
                         axi_rvalid_reg  <= `SLV_AXI_RD_ADDR_NVALID;
                     end
                 end
@@ -194,13 +194,13 @@ module axi_4_slv (
             end
         end else begin
             if (slv_reg_wren) begin
-                for (byte_id = 0; byte_id < `C_AXI_STROBE_WIDTH - 1; byte_id = byte_id + 1) begin
+                for (byte_id = 0; byte_id < `C_AXI_STROBE_WIDTH; byte_id = byte_id + 1) begin
                     if (S_AXI_WSTRB[byte_id]) begin
                         // Example to illustrate how strobe mechanism works:
                         // if byte_id = 0 then [(0*8)+:8] -> [0+:8] this selects [7:0]
                         // the line performs: 
-                        // regfile[write_index][7:0]         <= S_AXI_WDATA[7:0]
-                        regfile[write_index][(byte_id*8)+:8] <= S_AXI_WDATA[(byte_id*8)+:8];
+                        // regfile[axi_awaddr_latched][7:0]         <= S_AXI_WDATA[7:0]
+                        regfile[axi_awaddr_latched][(byte_id*8)+:8] <= S_AXI_WDATA[(byte_id*8)+:8];
                     end
                 end
             end
