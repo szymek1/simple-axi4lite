@@ -80,35 +80,35 @@ module axi_4_lite_slv (
     // Read process
     always @(posedge S_AXI_ACLK) begin
         if (!S_AXI_ARESETN) begin
-            axi_arready_reg <= 0;
-            axi_rvalid_reg  <= 0;
+            axi_arready_reg    <= `SLV_AXI_RD_ADDR_NREADY;
+            axi_rvalid_reg     <= `SLV_AXI_RD_ADDR_NVALID;
+
             axi_araddr_latched <= 0;
-            axi_rdata_reg   <= 0;
-            axi_rresp_reg  <= 2'bx;
+            axi_rdata_reg      <= 0;
+            axi_rresp_reg      <= 2'bx;
         end else begin
-            axi_arready_reg <= 0;
-            axi_rvalid_reg  <= 0;
+            axi_arready_reg    <= `SLV_AXI_RD_ADDR_NREADY;
+            axi_rvalid_reg     <= `SLV_AXI_RD_ADDR_NVALID;
 
             // Read transaction begins: master issues read address and sets S_AXI_ARVALID high
-            if (S_AXI_ARVALID == 1 && axi_arready_reg == 0) begin
-                axi_arready_reg <= 1;
+            if (S_AXI_ARVALID == `MS_RD_ADDR_VALID && axi_arready_reg == `SLV_AXI_RD_ADDR_NREADY) begin
+                axi_arready_reg    <= `SLV_AXI_RD_ADDR_READY;
                 axi_araddr_latched <= S_AXI_ARADDR;
             end
 
             // Read handshake: read data will be available in the next clock cycle
-            if (S_AXI_ARVALID == 1 && axi_arready_reg == 1) begin
-                axi_arready_reg <= 0;
-                axi_rvalid_reg  <= 1;
-                axi_rresp_reg  <= `OKAY;
+            if (S_AXI_ARVALID == `MS_RD_ADDR_VALID && axi_arready_reg == `SLV_AXI_RD_ADDR_READY) begin
+                axi_arready_reg <= `SLV_AXI_RD_ADDR_NREADY;
+                axi_rvalid_reg  <= `SLV_AXI_RD_ADDR_VALID;
+                axi_rresp_reg   <= `OKAY;
                 axi_rdata_reg   <= regfile[axi_araddr_latched];
             end
 
-            if (S_AXI_RREADY == 1 && axi_rvalid_reg == 1) begin
-                axi_rvalid_reg  <= 0;
-                axi_rresp_reg  <= 2'bx;
+            if (S_AXI_RREADY == `MS_RD_ADDR_READY && axi_rvalid_reg == `SLV_AXI_RD_ADDR_VALID) begin
+                axi_rvalid_reg  <= `SLV_AXI_RD_ADDR_NVALID;
+                axi_rresp_reg   <= 2'bx;
                 axi_rdata_reg   <= 0;
             end
-
         end
     end
 
@@ -118,12 +118,14 @@ module axi_4_lite_slv (
             axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
             axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
             axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
+
             axi_awaddr_latched <= 0;
             slv_reg_wren       <= 0;
         end else begin
             axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
             axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
             axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
+
             slv_reg_wren       <= 0;
 
             // Write transaction begins: master issues write addresss and sets S_AXI_AWVALID high
