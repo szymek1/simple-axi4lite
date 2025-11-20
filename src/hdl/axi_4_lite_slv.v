@@ -36,17 +36,25 @@ module axi_4_lite_slv (
 	output	wire					               S_AXI_RVALID,   // AXI read address valid
 	input	wire					               S_AXI_RREADY,   // AXI read address ready
 	output	wire [`C_AXI_DATA_WIDTH-1:0]		   S_AXI_RDATA,    // AXI read data issued by slave
-	output	wire [1:0]				               S_AXI_RRESP     // AXI read response. This signal indicates the status of the read transfer
+	output	wire [1:0]				               S_AXI_RRESP,    // AXI read response. This signal indicates the status of the read transfer
                                                                    // Check axi4_lite_configuration.vh for details
+
+    // Debug outputs
+    output wire  [`C_ADDR_REG_BITS-1:0]            DEB_READ_INDEX,
+    output wire  [`C_ADDR_REG_BITS-1:0]            DEB_WRITE_INDEX                                                             
 );
 
     // Register file definition
     reg [`C_AXI_DATA_WIDTH-1:0] regfile [`C_REGISTERS_NUMBER-1:0];
     integer reg_id;
 
-    // Read/Write indexes
+    // Read/Write indexes (point to specific word)
     wire [`C_ADDR_REG_BITS-1:0] read_index  = S_AXI_ARADDR[`C_AXI_ADDR_WIDTH-1:`C_ADDR_LSB];
     wire [`C_ADDR_REG_BITS-1:0] write_index = S_AXI_AWADDR[`C_AXI_ADDR_WIDTH-1:`C_ADDR_LSB];
+
+    // Assigning debug ports
+    assign DEB_READ_INDEX  = read_index;
+    assign DEB_WRITE_INDEX = write_index;
 
     // Internal registers
     // Write channel internal registers
@@ -54,7 +62,7 @@ module axi_4_lite_slv (
     reg                         axi_wready_reg;
     reg                         axi_bvalid_reg;
     reg [1:0]                   axi_bresp_reg;
-    reg [`C_AXI_ADDR_WIDTH-1:0] axi_awaddr_latched; // latched write address
+    reg [`C_ADDR_REG_BITS-1:0] axi_awaddr_latched; // latched write address
     reg                         slv_reg_wren;       // internal write-enable pulse for user logic
 
     // Read channel internal registers
@@ -62,7 +70,7 @@ module axi_4_lite_slv (
     reg                         axi_rvalid_reg;
     reg [1:0]                   axi_rresp_reg;
     reg [`C_AXI_DATA_WIDTH-1:0] axi_rdata_reg;      // pipelined read data output
-    reg [`C_AXI_ADDR_WIDTH-1:0] axi_araddr_latched; // latched read address
+    reg [`C_ADDR_REG_BITS-1:0]  axi_araddr_latched; // latched read address
 
     // Output wires
     // Write related
@@ -93,7 +101,7 @@ module axi_4_lite_slv (
             // Read transaction begins: master issues read address and sets S_AXI_ARVALID high
             if (S_AXI_ARVALID == `MS_RD_ADDR_VALID && axi_arready_reg == `SLV_AXI_RD_ADDR_NREADY) begin
                 axi_arready_reg    <= `SLV_AXI_RD_ADDR_READY;
-                axi_araddr_latched <= S_AXI_ARADDR;
+                axi_araddr_latched <= read_index;
             end
 
             // Read handshake: read data will be available in the next clock cycle
@@ -131,7 +139,7 @@ module axi_4_lite_slv (
             // Write transaction begins: master issues write addresss and sets S_AXI_AWVALID high
             if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_NREADY) begin
                 axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY;
-                axi_awaddr_latched <= S_AXI_AWADDR;
+                axi_awaddr_latched <= write_index;
             end 
 
             // Write address handshake is complete 

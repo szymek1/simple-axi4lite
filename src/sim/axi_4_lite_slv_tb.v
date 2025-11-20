@@ -49,6 +49,10 @@ module axi_4_lite_slv_tb;
     wire [`C_AXI_DATA_WIDTH-1:0] S_AXI_RDATA;
     wire [1:0]                   S_AXI_RRESP;
 
+    // Debug ports
+    wire  [`C_ADDR_REG_BITS-1:0] DEB_READ_INDEX;
+    wire  [`C_ADDR_REG_BITS-1:0] DEB_WRITE_INDEX;
+
     // --- Instantiate the Device Under Test (DUT) ---
     axi_4_lite_slv dut (
         .S_AXI_ACLK(S_AXI_ACLK),
@@ -71,7 +75,9 @@ module axi_4_lite_slv_tb;
         .S_AXI_RVALID(S_AXI_RVALID),
         .S_AXI_RREADY(S_AXI_RREADY),
         .S_AXI_RDATA(S_AXI_RDATA),
-        .S_AXI_RRESP(S_AXI_RRESP)
+        .S_AXI_RRESP(S_AXI_RRESP),
+        .DEB_READ_INDEX(DEB_READ_INDEX),
+        .DEB_WRITE_INDEX(DEB_WRITE_INDEX)
     );
 
     // Clock generator
@@ -121,22 +127,6 @@ module axi_4_lite_slv_tb;
         $display("[%0t] Test 4: Full Word Read from Reg 5.", $time);
         axi_read(5 * 4, 32'hFFFFFFFF);
 
-        /*
-        // --- TEST 2: Full Word Read ---
-        $display("[%0t] Test 2: Full Word Read from Reg 0.", $time);
-        axi_read(0, 32'hDEADBEEF);
-        
-        // --- TEST 3: Full Word Write (for byte-write test) ---
-        $display("[%0t] Test 3: Pre-loading Reg 5 with 0xFFFFFFFF.", $time);
-        axi_write(5 * 4, 32'hFFFFFFFF, 4'b1111);
-
-        // --- TEST 4: Full Word Read (for byte-write test) ---
-        $display("[%0t] Test 4: Full Word Read from Reg 5.", $time);
-        axi_read(5 * 4, 32'hFFFFFFFF);
-        // --- TEST 4: Byte Write (middle two bytes) ---
-        $display("[%0t] Test 4: Byte Write to Reg 5 (Strobe 0110).", $time);
-        axi_write(5 * 4, 32'h12345678, 4'b0110);
-        
         // --- TEST 5: Read back byte-written register ---
         $display("[%0t] Test 5: Read from Reg 5.", $time);
         axi_read(5 * 4, 32'hFF5634FF); // Byte 0,3 from prev, Byte 1,2 from new
@@ -148,7 +138,7 @@ module axi_4_lite_slv_tb;
         // --- TEST 7: Read from last register (Reg 31) ---
         $display("[%0t] Test 7: Full Word Read from Reg 31.", $time);
         axi_read(31 * 4, 32'hA5A5A5A5);
-        */
+
         $display("[%0t] --- All Tests Passed ---", $time);
         $finish;
     end
