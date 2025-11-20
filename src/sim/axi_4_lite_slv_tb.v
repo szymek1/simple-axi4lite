@@ -160,6 +160,8 @@ module axi_4_lite_slv_tb;
         wait (S_AXI_AWREADY)
         @(posedge S_AXI_ACLK);
         S_AXI_BREADY <= 1'b1;
+        @(posedge S_AXI_ACLK);
+        @(posedge S_AXI_ACLK);
         S_AXI_WVALID  <= 1'b1;
         S_AXI_WDATA   <= data;
         S_AXI_WSTRB   <= strobe;
@@ -167,6 +169,7 @@ module axi_4_lite_slv_tb;
 
         // Wait until slave accepts data
         wait (S_AXI_WREADY);
+        @(posedge S_AXI_ACLK);
         @(posedge S_AXI_ACLK);
         S_AXI_WVALID  <= 1'b0;
         
@@ -192,6 +195,8 @@ module axi_4_lite_slv_tb;
         S_AXI_ARADDR  <= addr;
         
         wait (S_AXI_ARREADY);
+        @(posedge S_AXI_ACLK);
+        @(posedge S_AXI_ACLK);
         @(posedge S_AXI_ACLK);
         S_AXI_ARVALID <= 1'b0;
 
