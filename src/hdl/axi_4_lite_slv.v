@@ -62,7 +62,7 @@ module axi_4_lite_slv (
     reg                         axi_wready_reg;
     reg                         axi_bvalid_reg;
     reg [1:0]                   axi_bresp_reg;
-    reg [`C_ADDR_REG_BITS-1:0] axi_awaddr_latched; // latched write address
+    reg [`C_ADDR_REG_BITS-1:0] axi_awaddr_latched;  // latched write address
     reg                         slv_reg_wren;       // internal write-enable pulse for user logic
 
     // Read channel internal registers
