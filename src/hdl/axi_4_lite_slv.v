@@ -62,7 +62,7 @@ module axi_4_lite_slv (
     reg                         axi_wready_reg;
     reg                         axi_bvalid_reg;
     reg [1:0]                   axi_bresp_reg;
-    reg [`C_ADDR_REG_BITS-1:0] axi_awaddr_latched;  // latched write address
+    reg [`C_ADDR_REG_BITS-1:0]  axi_awaddr_latched;  // latched write address
     reg                         slv_reg_wren;       // internal write-enable pulse for user logic
 
     // Read channel internal registers
@@ -86,7 +86,7 @@ module axi_4_lite_slv (
     assign S_AXI_RDATA   = axi_rdata_reg;
 
     // Read process
-    always @(posedge S_AXI_ACLK) begin
+    always @(posedge S_AXI_ACLK or negedge S_AXI_ARESETN) begin
         if (!S_AXI_ARESETN) begin
             axi_arready_reg    <= `SLV_AXI_RD_ADDR_READY; 
             axi_rvalid_reg     <= `SLV_AXI_RD_ADDR_NVALID;
@@ -111,7 +111,7 @@ module axi_4_lite_slv (
     end
 
     // Write process
-    always @(posedge S_AXI_ACLK) begin
+    always @(posedge S_AXI_ACLK or negedge S_AXI_ARESETN) begin
         if (!S_AXI_ARESETN) begin
             axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY; 
             axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
@@ -142,7 +142,7 @@ module axi_4_lite_slv (
 
     // Register write and reset process
     integer byte_id;
-    always @(posedge S_AXI_ACLK) begin
+    always @(posedge S_AXI_ACLK or negedge S_AXI_ARESETN) begin
         if (!S_AXI_ARESETN) begin
             for (reg_id = 0; reg_id < `C_REGISTERS_NUMBER; reg_id = reg_id + 1) begin
                 regfile[reg_id] <= `C_AXI_DATA_WIDTH'h0;
