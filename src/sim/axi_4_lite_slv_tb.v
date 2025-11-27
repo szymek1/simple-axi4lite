@@ -152,6 +152,7 @@ module axi_4_lite_slv_tb;
     );
     begin
         // 1. Send Address
+        @(posedge S_AXI_ACLK);
         S_AXI_AWVALID <= 1'b1;
         S_AXI_AWADDR  <= addr;
 
@@ -160,8 +161,7 @@ module axi_4_lite_slv_tb;
         wait (S_AXI_AWREADY)
         @(posedge S_AXI_ACLK);
         S_AXI_BREADY <= 1'b1;
-        @(posedge S_AXI_ACLK);
-        @(posedge S_AXI_ACLK);
+        // @(posedge S_AXI_ACLK);
         S_AXI_WVALID  <= 1'b1;
         S_AXI_WDATA   <= data;
         S_AXI_WSTRB   <= strobe;
@@ -170,14 +170,13 @@ module axi_4_lite_slv_tb;
         // Wait until slave accepts data
         wait (S_AXI_WREADY);
         @(posedge S_AXI_ACLK);
-        @(posedge S_AXI_ACLK);
         S_AXI_WVALID  <= 1'b0;
         
         wait (S_AXI_BVALID);
         @(posedge S_AXI_ACLK);
         S_AXI_BREADY <= 1'b0;
         
-        if (S_AXI_BRESP != `OKAY) begin
+        if (S_AXI_BRESP != `AXI_RESP_OKAY) begin
             $display("ERROR: AXI Write Failed. BRESP = %b", S_AXI_BRESP);
         end
     end
@@ -191,12 +190,11 @@ module axi_4_lite_slv_tb;
     );
     begin
         // 1. Send Address
+        @(posedge S_AXI_ACLK);
         S_AXI_ARVALID <= 1'b1;
         S_AXI_ARADDR  <= addr;
         
         wait (S_AXI_ARREADY);
-        @(posedge S_AXI_ACLK);
-        @(posedge S_AXI_ACLK);
         @(posedge S_AXI_ACLK);
         S_AXI_ARVALID <= 1'b0;
 
@@ -212,7 +210,7 @@ module axi_4_lite_slv_tb;
                      addr, S_AXI_RDATA, expected_data);
         end
         
-        if (S_AXI_RRESP != `OKAY) begin
+        if (S_AXI_RRESP != `AXI_RESP_OKAY) begin
             $display("ERROR: AXI Read Failed. RRESP = %b", S_AXI_RRESP);
         end
 
