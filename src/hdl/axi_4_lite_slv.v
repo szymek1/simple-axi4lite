@@ -109,9 +109,6 @@ module axi_4_lite_slv (
                 axi_rvalid_reg  <= `SLV_AXI_RD_ADDR_NVALID;
                 axi_rresp_reg   <= 2'bx;
                 axi_rdata_reg   <= 0;
-            end else begin
-                axi_arready_reg    <= `SLV_AXI_RD_ADDR_NREADY;
-                axi_rvalid_reg     <= `SLV_AXI_RD_ADDR_NVALID;
             end
         end
     end
@@ -119,57 +116,29 @@ module axi_4_lite_slv (
     // Write process
     always @(posedge S_AXI_ACLK) begin
         if (!S_AXI_ARESETN) begin
-            // axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
-            axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY;
+            axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
             axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
             axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
 
             axi_awaddr_latched <= 0;
             slv_reg_wren       <= 0;
         end else begin
-            /*
+            slv_reg_wren <= 0;
             if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_NREADY) begin
                 // Write transaction begins: master issues write addresss and sets S_AXI_AWVALID high
                 axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY;
                 axi_awaddr_latched <= write_index;
             end else if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_READY) begin
                 // Write address handshake is complete
-                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY;   
-            end else if (S_AXI_WVALID == `MS_WRT_DATA_NVALID && axi_wready_reg == `SLV_AXI_WRT_DATA_READY) begin
-                // Waiting for the master to issue S_AXI_WVALID high to make sure that there's a write data available
-                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY; 
-            end else if (S_AXI_WVALID == `MS_WRT_DATA_VALID && S_AXI_BREADY == `MS_WRT_RESP_READY && axi_wready_reg == `SLV_AXI_WRT_DATA_READY) begin
-                // Register file will begin writing in the next clock cycle once this condition is satisfied
-                slv_reg_wren       <= 1;
-                axi_bresp_reg      <= `OKAY;
-                axi_bvalid_reg     <= `SLV_AXI_WRT_VALID;
-            end else begin
+                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY;  
                 axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
-                axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
-                axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
-
-                slv_reg_wren       <= 0;
-            end
-            */
-            if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_READY) begin
-                // Write address handshake is complete
-                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY;   
-                axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
-            end else if (S_AXI_WVALID == `MS_WRT_DATA_NVALID && axi_wready_reg == `SLV_AXI_WRT_DATA_READY) begin
-                // Waiting for the master to issue S_AXI_WVALID high to make sure that there's a write data available
-                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY; 
-            end else if (S_AXI_WVALID == `MS_WRT_DATA_VALID && S_AXI_BREADY == `MS_WRT_RESP_READY && axi_wready_reg == `SLV_AXI_WRT_DATA_READY) begin
-                // Register file will begin writing in the next clock cycle once this condition is satisfied
-                slv_reg_wren       <= 1;
+            end else if (S_AXI_WVALID == `MS_WRT_DATA_VALID && axi_wready_reg == `SLV_AXI_WRT_DATA_READY) begin
+                slv_reg_wren       <= 1; 
+                axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY; 
+                axi_bvalid_reg     <= `SLV_AXI_WRT_VALID;      
                 axi_bresp_reg      <= `OKAY;
-                axi_bvalid_reg     <= `SLV_AXI_WRT_VALID;
-            end else begin
-                // axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
-                axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY;
-                axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
+            end else if (S_AXI_BVALID && S_AXI_BREADY) begin
                 axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
-
-                slv_reg_wren       <= 0;
             end
         end
     end
