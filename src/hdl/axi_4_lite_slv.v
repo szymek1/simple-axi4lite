@@ -88,27 +88,24 @@ module axi_4_lite_slv (
     // Read process
     always @(posedge S_AXI_ACLK) begin
         if (!S_AXI_ARESETN) begin
-            axi_arready_reg    <= `SLV_AXI_RD_ADDR_NREADY;
+            axi_arready_reg    <= `SLV_AXI_RD_ADDR_READY; 
             axi_rvalid_reg     <= `SLV_AXI_RD_ADDR_NVALID;
-
             axi_araddr_latched <= 0;
             axi_rdata_reg      <= 0;
             axi_rresp_reg      <= 2'bx;
         end else begin
-            if (S_AXI_ARVALID == `MS_RD_ADDR_VALID && axi_arready_reg == `SLV_AXI_RD_ADDR_NREADY) begin
-                // Read transaction begins: master issues read address and sets S_AXI_ARVALID high
-                axi_arready_reg    <= `SLV_AXI_RD_ADDR_READY;
-                axi_araddr_latched <= read_index;
-            end else if (S_AXI_ARVALID == `MS_RD_ADDR_VALID && axi_arready_reg == `SLV_AXI_RD_ADDR_READY) begin
-                // Read handshake: read data will be available in the next clock cycle
-                axi_arready_reg <= `SLV_AXI_RD_ADDR_NREADY;
-                axi_rvalid_reg  <= `SLV_AXI_RD_ADDR_VALID;
-                axi_rresp_reg   <= `OKAY;
-                axi_rdata_reg   <= regfile[axi_araddr_latched];
+            if (S_AXI_ARVALID == `MS_RD_ADDR_VALID && axi_arready_reg == `SLV_AXI_RD_ADDR_READY) begin
+                // Address handshake: slave is by default ready so the handshake happends immediately
+                //                    once the master issue the address
+                axi_arready_reg    <= `SLV_AXI_RD_ADDR_NREADY; 
+                axi_araddr_latched <= read_index;             
+                axi_rvalid_reg     <= `SLV_AXI_RD_ADDR_VALID;  // data will be valid in the next cycle
+                axi_rresp_reg      <= `OKAY;
+                axi_rdata_reg      <= regfile[read_index];
             end else if (S_AXI_RREADY == `MS_RD_ADDR_READY && axi_rvalid_reg == `SLV_AXI_RD_ADDR_VALID) begin
-                axi_rvalid_reg  <= `SLV_AXI_RD_ADDR_NVALID;
-                axi_rresp_reg   <= 2'bx;
-                axi_rdata_reg   <= 0;
+                // Transaction complete: master accepts the data
+                axi_rvalid_reg     <= `SLV_AXI_RD_ADDR_NVALID;
+                axi_arready_reg    <= `SLV_AXI_RD_ADDR_READY;  // heres ready for the new read transaction
             end
         end
     end
@@ -116,29 +113,29 @@ module axi_4_lite_slv (
     // Write process
     always @(posedge S_AXI_ACLK) begin
         if (!S_AXI_ARESETN) begin
-            axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
+            axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY; 
             axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
             axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
-
             axi_awaddr_latched <= 0;
             slv_reg_wren       <= 0;
         end else begin
             slv_reg_wren <= 0;
-            if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_NREADY) begin
-                // Write transaction begins: master issues write addresss and sets S_AXI_AWVALID high
-                axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY;
+
+            if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_READY) begin
+                // Address handshake: slave is by default READY and master has to issue VALID
                 axi_awaddr_latched <= write_index;
-            end else if (S_AXI_AWVALID == `MS_WRT_ADDR_VALID && axi_awready_reg == `SLV_AXI_WRT_ADDR_READY) begin
-                // Write address handshake is complete
-                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY;  
                 axi_awready_reg    <= `SLV_AXI_WRT_ADDR_NREADY;
+                axi_wready_reg     <= `SLV_AXI_WRT_DATA_READY;  
             end else if (S_AXI_WVALID == `MS_WRT_DATA_VALID && axi_wready_reg == `SLV_AXI_WRT_DATA_READY) begin
-                slv_reg_wren       <= 1; 
-                axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY; 
-                axi_bvalid_reg     <= `SLV_AXI_WRT_VALID;      
+                // Data handshake: slave is ready to accept new write data and it's waiting for the master to issue VALID
+                axi_wready_reg     <= `SLV_AXI_WRT_DATA_NREADY;
+                slv_reg_wren       <= 1;                        
+                axi_bvalid_reg     <= `SLV_AXI_WRT_VALID;       
                 axi_bresp_reg      <= `OKAY;
             end else if (S_AXI_BVALID && S_AXI_BREADY) begin
+                // Response
                 axi_bvalid_reg     <= `SLV_AXI_WRT_NVALID;
+                axi_awready_reg    <= `SLV_AXI_WRT_ADDR_READY; // heres ready for the new write transaction
             end
         end
     end
