@@ -175,7 +175,7 @@ module axi_4_lite_slv_tb;
         @(posedge S_AXI_ACLK);
         S_AXI_BREADY <= 1'b0;
         
-        if (S_AXI_BRESP != `OKAY) begin
+        if (S_AXI_BRESP != `AXI_RESP_OKAY) begin
             $display("ERROR: AXI Write Failed. BRESP = %b", S_AXI_BRESP);
         end
     end
@@ -208,7 +208,7 @@ module axi_4_lite_slv_tb;
                      addr, S_AXI_RDATA, expected_data);
         end
         
-        if (S_AXI_RRESP != `OKAY) begin
+        if (S_AXI_RRESP != `AXI_RESP_OKAY) begin
             $display("ERROR: AXI Read Failed. RRESP = %b", S_AXI_RRESP);
         end
 
