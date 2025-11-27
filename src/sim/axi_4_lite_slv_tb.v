@@ -152,6 +152,7 @@ module axi_4_lite_slv_tb;
     );
     begin
         // 1. Send Address
+        @(posedge S_AXI_ACLK);
         S_AXI_AWVALID <= 1'b1;
         S_AXI_AWADDR  <= addr;
 
@@ -189,6 +190,7 @@ module axi_4_lite_slv_tb;
     );
     begin
         // 1. Send Address
+        @(posedge S_AXI_ACLK);
         S_AXI_ARVALID <= 1'b1;
         S_AXI_ARADDR  <= addr;
         
