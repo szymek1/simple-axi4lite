@@ -92,7 +92,7 @@ module axi_4_lite_slv (
             S_AXI_RVALID_      <= 1'b0;
             axi_araddr_latched <= 0;
             S_AXI_RDATA_       <= 0;
-            S_AXI_RRESP_       <= 2'b0;
+            S_AXI_RRESP_       <= `AXI_RESP_OKAY;
         end else begin
             if (S_AXI_ARVALID && S_AXI_ARREADY_) begin
                 // Address handshake: slave is by default ready so the handshake happends immediately
@@ -116,6 +116,7 @@ module axi_4_lite_slv (
             S_AXI_AWREADY_     <= 1'b1; 
             S_AXI_WREADY_      <= 1'b0;
             S_AXI_BVALID_      <= 1'b0;
+            S_AXI_BRESP_       <= `AXI_RESP_OKAY;
             axi_awaddr_latched <= 0;
             slv_reg_wren       <= 0;
         end else begin
